@@ -4,19 +4,47 @@
 
 ## Unique-各自特性
 
+这一块中应该对训练集和测试集都进行分析
+
 ```python
 #常用的数据分析及可视化的工具包
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+#导入数据，此处假设是.csv文件
+train_data = pd.read_csv('data_path/train_file.csv', sep='')
+test_data = pd.read_csv('data_path/test_file.csv', sep='')
 ```
 
-## 1.脏数据，残缺的数据
+### 1.脏数据，残缺的数据
 
+* 数据加载检查
 
-## 2.基本统计特征
+数据加载以后有必要简单看一下导入的数据大致的内容，并且检查一下有没有导入出错
 
-## 3.分布
+```python
+#训练集和测试集的头尾数据大致内容
+train_data.head().append(train_data.tail())
+test_data.head().append(test_data.tail())
+
+#数据集的shape信息，对应数据量以及特征数（可能会包括label特征)
+train_data.shape
+test_data.shape
+```
+
+* 数据类型概览
+
+常用的模型都是对数值进行处理的，pd.DataFrame中dtype为int, float的数据在之后有进一步的分析，这一步重点应该关照其他类型的数据，比如object类型的，因为在这些类型的数据中可能存在NaN以外的残缺值pandas不能识别（pandas只能识别并处理NaN残缺数据）
+
+```python
+# view dtype of each feature
+train_data.info()
+test_data.info()
+```
+### 2.基本统计特征
+
+### 3.分布
 
 ## Correlation-相互之间的关联
