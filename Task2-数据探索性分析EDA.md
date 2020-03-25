@@ -72,7 +72,7 @@ msno.matrix(train_data.sample(250))
 msno.matrix(test_data.sample(250))
 ```
 
-### 2.基本统计特征
+### 2. 基本统计特征
 
 对各项数据的取值范围以及一些基本的统计信息（个数count，均值mean，方差std，最小值min，中位数25%50%75%，最大值max）有基本的了解。
 
@@ -81,9 +81,46 @@ train_data.describe()
 test_data.describe()
 ```
 
-### 3.分布
+### 3. 分布
 
-观察数据的分布目前总结出两个作用：一是确保训练集和测试集的数据分布大体一致，避免训练好的模型因为两个数据集的分布不一致而表现出比较差的性能；二是能看出倾斜数据，对预测没有什么帮助，还可能产生干扰，所以需要及早发现和处理避免影响模型的判断。
+观察数据的分布目前总结出两个作用：一是确保训练集和测试集的数据分布大体一致，避免训练好的模型因为两个数据集的分布不一致而表现出比较差的性能；二是能看出倾斜数据，有的严重倾斜，对预测没有什么帮助，还可能产生干扰，有的具有一定倾斜程度，长尾效应等，这时可以使用对数变化等改变数据的分布特性，所以需要及早发现和处理避免影响模型的判断。
 
+此外，特征大一点说，可以分为**数值型特征**和**类别型特征**；小一点说可以分为**定类特征**、**定序特征**、**定距特征**。
+  - 定类特征：仅仅是有类别编号，编号之间的相对值没有什么实际意义（比如地区编号）
+  - 定序特征：也是类别特征，但是类别编号的大小决定了对应数据的先后，高低等等（比如收入等级）
+  - 定距特征：数值型的，这个含义就很明显
+  
+不同的特征类型对应着不同的分析操作。
 
+### 3.1 分布可视化
+
+可视化能对每个数据的分布情况有一个大体和直观的了解。
+
+```python
+# 数值型
+f = pd.melt(Train_data, value_vars=columns_spec)
+g = sns.FacetGrid(f, col="variable",  col_wrap=4, sharex=False, sharey=False)
+g = g.map(sns.distplot, "value")
+```
+
+```python
+# 类别型
+
+```
+
+### 3.2 偏度和峰度
+
+主要对数值型数据。偏度衡量数据总体取值分布的对称性，常说左偏、右偏；偏度描述数据取值分布形态的陡缓程度，常说高顶和平顶。两者都是以正态分布为基准来描述的。详见[这里](https://support.minitab.com/zh-cn/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/data-concepts/how-skewness-and-kurtosis-affect-your-distribution/)
+
+```python
+# 格式化打印出各项数据峰偏度值
+for col in features:
+    print('{:15}'.format(col), 
+          'Skewness: {:05.2f}'.format(Train_data[col].skew()) , 
+          ' '*5,
+          'Kurtosis: {:06.2f}'.format(Train_data[col].kurt())  
+          )
+```
+
+### 3.3 
 ## Correlation-相互之间的关联
