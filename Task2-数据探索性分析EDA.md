@@ -24,8 +24,8 @@ import seaborn as sns
 train_data = pd.read_csv('data_path/train_file.csv', sep='')
 test_data = pd.read_csv('data_path/test_file.csv', sep='')
 ```
-
-### <span id='数据残缺情况'>1. 脏数据，残缺的数据</span>
+<span id='数据残缺情况'> </span>
+### 1. 脏数据，残缺的数据
 
 #### 1.1 数据加载检查
 
@@ -71,16 +71,16 @@ import missingno as msno
 msno.matrix(train_data.sample(250))
 msno.matrix(test_data.sample(250))
 ```
-
-### <span id='基本统计特征'>2. 基本统计特征</span>
+<span id='基本统计特征'> </span>
+### 2. 基本统计特征
 
 对各项数据的取值范围以及一些基本的统计信息（个数count，均值mean，方差std，最小值min，中位数25%50%75%，最大值max）有基本的了解。  
 ```python
 train_data.describe()
 test_data.describe()
 ```
-
-### <span id='分布'>3. 分布</span>
+<span id='分布'> </span>
+### 3. 分布
 
 观察数据的分布目前总结出两个作用：一是确保训练集和测试集的数据分布大体一致，避免训练好的模型因为两个数据集的分布不一致而表现出比较差的性能；二是能看出倾斜数据，有的严重倾斜，对预测没有什么帮助，还可能产生干扰，有的具有一定倾斜程度，长尾效应等，这时可以使用对数变化等改变数据的分布特性，所以需要及早发现和处理避免影响模型的判断。  
 此外，特征大一点说，可以分为**数值型特征**和**类别型特征**；小一点说可以分为**定类特征**、**定序特征**、**定距特征**。  
