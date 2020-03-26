@@ -2,6 +2,14 @@
 
 实际问题中，在对问题进行建模调参求得拟合的模型之前，最重要的步骤是进行EDA，它决定了之后的特征工程的方向以及模型的训练效果。通过EDA，能够加深我们对收集到的数据的细节的认识。我认为数据的EDA可以从两个方面来看待，第一个方面是各项数据本身特性的分析，第二个方面是各项数据之间的相关性分析。
 
+## 目录
+* [本身特性分析](#Unique-各自特性)
+  * [数据残缺情况](#脏数据，残缺的数据)
+  * [基本统计特征](#基本统计特征)
+  * [分布情况](#分布)
+* [关联性分析](#Correlation-相互之间的关联)
+* [生成数据报告](#生成数据报告)
+
 ## Unique-各自特性
 
 这一块中应该对训练集和测试集都进行分析  
@@ -78,20 +86,19 @@ test_data.describe()
 此外，特征大一点说，可以分为**数值型特征**和**类别型特征**；小一点说可以分为**定类特征**、**定序特征**、**定距特征**。  
 - 定类特征：仅仅是有类别编号，编号之间的相对值没有什么实际意义（比如地区编号）
 - 定序特征：也是类别特征，但是类别编号的大小决定了对应数据的先后，高低等等（比如收入等级）
-- 定距特征：数值型的，这个含义就很明显  
+- 定距特征：数值型的，这个含义就很明显
+
 不同的特征类型对应着不同的分析操作。
 
 #### 3.1 分布可视化
 
-可视化能对每个数据的分布情况有一个大体和直观的了解。
-
+可视化能对每个数据的分布情况有一个大体和直观的了解。  
 ```python
 # --------数值型--------
 f = pd.melt(Train_data, value_vars=columns_spec)
 g = sns.FacetGrid(f, col="variable",  col_wrap=4, sharex=False, sharey=False)
 g = g.map(sns.distplot, "value")
-```
-
+```  
 ```python
 # --------类别型--------
 # 箱形图
@@ -137,8 +144,7 @@ g = g.map(count_plot, "value")
 
 #### 3.2 偏度和峰度
 
-主要对数值型数据。偏度衡量数据总体取值分布的对称性，常说左偏、右偏；偏度描述数据取值分布形态的陡缓程度，常说高顶和平顶。两者都是以正态分布为基准来描述的。详见 [这里](https://support.minitab.com/zh-cn/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/data-concepts/how-skewness-and-kurtosis-affect-your-distribution/)
-
+主要对数值型数据。偏度衡量数据总体取值分布的对称性，常说左偏、右偏；偏度描述数据取值分布形态的陡缓程度，常说高顶和平顶。两者都是以正态分布为基准来描述的。详见 [这里](https://support.minitab.com/zh-cn/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/data-concepts/how-skewness-and-kurtosis-affect-your-distribution/)  
 ```python
 # 格式化打印出各项数据峰偏度值
 for col in features:
@@ -151,8 +157,7 @@ for col in features:
 
 #### 3.3 单特征查看
 
-如果要具体的查看某一个特征的分布，除了使用sns.distplot等可视化工具外，还可以打印出一些统计信息以便于分析。
-
+如果要具体的查看某一个特征的分布，除了使用sns.distplot等可视化工具外，还可以打印出一些统计信息以便于分析。  
 ```python
 train_data['col_spec'].unique()    # 查看有多少个不同的取值
 train_data['col_spec'].value_counts()    # 各个取值的频数
@@ -160,8 +165,7 @@ train_data['col_spec'].value_counts()    # 各个取值的频数
 
 #### 3.4 预测值分布
 
-单独说这一块是因为分析预测值的分布情况有利于提高模型的拟合性能，比如预测值是长尾分布的话可以考虑用log变换来处理。
-
+单独说这一块是因为分析预测值的分布情况有利于提高模型的拟合性能，比如预测值是长尾分布的话可以考虑用log变换来处理。  
 ```python
 y = train_data['price']
 # 1)偏度和峰度
@@ -183,18 +187,13 @@ plt.hist(y, orientation = 'vertical',histtype = 'bar', color ='red')
 
 ## Correlation-相互之间的关联
 
-主要分为预测值和各特征之间的相关性、各特征相互之间的相关性，进行相关性的分析便于之后在特征工程中对各个特征进行相应的取舍和处理。（此处主要是针对数值特征，类别特征有待进一步考量确认）
-
-关于多变量之间相互关系的可视化更多信息可以参考 [这里](https://www.jianshu.com/p/6e18d21a4cad)
-
-* 预测值和输入特征之间
-
+主要分为预测值和各特征之间的相关性、各特征相互之间的相关性，进行相关性的分析便于之后在特征工程中对各个特征进行相应的取舍和处理。（此处主要是针对数值特征，类别特征有待进一步考量确认）(关于多变量之间相互关系的可视化更多信息可以参考 [这里](https://www.jianshu.com/p/6e18d21a4cad))  
+* 预测值和输入特征之间  
 ```python
 price_numeric = Train_data[numeric_features]
 correlation = price_numeric.corr()
 print(correlation['price'].sort_values(ascending = False),'\n')
-```
-
+```  
 ```python
 # 预测值和单个特征之间的回归关系
 fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6), (ax7, ax8), (ax9, ax10)) = plt.subplots(nrows=5, ncols=2, figsize=(24, 20))
@@ -228,17 +227,14 @@ sns.regplot(x='v_14',y = 'price',data = v_14_scatter_plot,scatter= True, fit_reg
 
 v_13_scatter_plot = pd.concat([Y_train,Train_data['v_13']],axis = 1)
 sns.regplot(x='v_13',y = 'price',data = v_13_scatter_plot,scatter= True, fit_reg=True, ax=ax10)
-```
-
-* 输入特征之间
-
+```  
+* 输入特征之间  
 ```python
 # 相互关系热力图，这里包含了预测变量price
 f , ax = plt.subplots(figsize = (7, 7))
 plt.title('Correlation of Numeric Features with Price',y=1,size=16)
 sns.heatmap(correlation,square = True,  vmax=0.8)
-```
-
+```  
 ```python
 # 相互关系可视化
 sns.set()
