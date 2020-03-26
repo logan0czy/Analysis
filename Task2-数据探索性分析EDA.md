@@ -20,7 +20,7 @@ test_data = pd.read_csv('data_path/test_file.csv', sep='')
 
 ### 1. 脏数据，残缺的数据
 
-### 1.1 数据加载检查
+#### 1.1 数据加载检查
 
 数据加载以后有必要简单看一下导入的数据大致的内容，并且检查一下有没有导入出错
 
@@ -34,7 +34,7 @@ train_data.shape
 test_data.shape
 ```
 
-### 1.2 数据类型概览
+#### 1.2 数据类型概览
 
 常用的模型都是对数值进行处理的，pd.DataFrame中dtype为int, float的数据在之后有进一步的分析，这一步重点应该关照其他类型的数据，比如object类型的，因为在这些类型的数据中可能存在NaN以外的残缺值pandas不能识别（pandas只能识别并处理NaN残缺数据）
 
@@ -55,7 +55,7 @@ test_data['notRepairedDamage'].value_counts()
 test_data['notRepairedDamage'].replace('-', np.nan, inplace=True)
 ```
 
-### 1.3 缺省情况总览
+#### 1.3 缺省情况总览
 
 对每项特征下的数据缺失情况进行统计，对于这些数据，不同的模型有不同的处理方法。比如树模型就可以直接将这些项空缺，树模型可以自己优化；但是对于另外一些模型就需要进行一定的处理，比如缺失量太多时考虑直接将该项特征进行删除，缺失量不是很大时可以对缺失的部分进行填充（如均值，众数，中位数，0，-1等等）
 
@@ -92,25 +92,63 @@ test_data.describe()
   
 不同的特征类型对应着不同的分析操作。
 
-### 3.1 分布可视化
+#### 3.1 分布可视化
 
 可视化能对每个数据的分布情况有一个大体和直观的了解。
 
 ```python
-# 数值型
+# --------数值型--------
 f = pd.melt(Train_data, value_vars=columns_spec)
 g = sns.FacetGrid(f, col="variable",  col_wrap=4, sharex=False, sharey=False)
 g = g.map(sns.distplot, "value")
 ```
 
 ```python
-# 类别型
+# --------类别型--------
+# 箱形图
+for c in categorical_features:
+    Train_data[c] = Train_data[c].astype('category')
+    if Train_data[c].isnull().any():
+        Train_data[c] = Train_data[c].cat.add_categories(['MISSING'])
+        Train_data[c] = Train_data[c].fillna('MISSING')
 
+def boxplot(x, y, **kwargs):
+    sns.boxplot(x=x, y=y)
+    x=plt.xticks(rotation=90)
+
+f = pd.melt(Train_data, id_vars=['price'], value_vars=categorical_features)
+g = sns.FacetGrid(f, col="variable",  col_wrap=2, sharex=False, sharey=False, size=5)
+g = g.map(boxplot, "value", "price")
+
+# 小提琴图
+catg_list = categorical_features
+target = 'price'
+for catg in catg_list :
+    sns.violinplot(x=catg, y=target, data=Train_data)
+    plt.show()
+    
+# 柱形图
+def bar_plot(x, y, **kwargs):
+    sns.barplot(x=x, y=y)
+    x=plt.xticks(rotation=90)
+
+f = pd.melt(Train_data, id_vars=['price'], value_vars=categorical_features)
+g = sns.FacetGrid(f, col="variable",  col_wrap=2, sharex=False, sharey=False, size=5)
+g = g.map(bar_plot, "value", "price")
+
+# 各自频数
+def count_plot(x,  **kwargs):
+    sns.countplot(x=x)
+    x=plt.xticks(rotation=90)
+
+f = pd.melt(Train_data,  value_vars=categorical_features)
+g = sns.FacetGrid(f, col="variable",  col_wrap=2, sharex=False, sharey=False, size=5)
+g = g.map(count_plot, "value")
 ```
 
-### 3.2 偏度和峰度
+#### 3.2 偏度和峰度
 
-主要对数值型数据。偏度衡量数据总体取值分布的对称性，常说左偏、右偏；偏度描述数据取值分布形态的陡缓程度，常说高顶和平顶。两者都是以正态分布为基准来描述的。详见[这里](https://support.minitab.com/zh-cn/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/data-concepts/how-skewness-and-kurtosis-affect-your-distribution/)
+主要对数值型数据。偏度衡量数据总体取值分布的对称性，常说左偏、右偏；偏度描述数据取值分布形态的陡缓程度，常说高顶和平顶。两者都是以正态分布为基准来描述的。详见 [这里](https://support.minitab.com/zh-cn/minitab/18/help-and-how-to/statistics/basic-statistics/supporting-topics/data-concepts/how-skewness-and-kurtosis-affect-your-distribution/)
 
 ```python
 # 格式化打印出各项数据峰偏度值
@@ -122,5 +160,108 @@ for col in features:
           )
 ```
 
-### 3.3 
+#### 3.3 单特征查看
+
+如果要具体的查看某一个特征的分布，除了使用sns.distplot等可视化工具外，还可以打印出一些统计信息以便于分析。
+
+```python
+train_data['col_spec'].unique()    # 查看有多少个不同的取值
+train_data['col_spec'].value_counts()    # 各个取值的频数
+```
+
+#### 3.4 预测值分布
+
+单独说这一块是因为分析预测值的分布情况有利于提高模型的拟合性能，比如预测值是长尾分布的话可以考虑用log变换来处理。
+
+```python
+y = train_data['price']
+# 1)偏度和峰度
+y.skew()
+y.kurt()
+
+# 2)总体分布情况，用不同的分布进行拟合
+import scipy.stats as st
+plt.figure(1); plt.title('Johnson SU')
+sns.distplot(y, kde=False, fit=st.johnsonsu)
+plt.figure(2); plt.title('Normal')
+sns.distplot(y, kde=False, fit=st.norm)
+plt.figure(3); plt.title('Log Normal')
+sns.distplot(y, kde=False, fit=st.lognorm)
+
+# 3)取值频数
+plt.hist(y, orientation = 'vertical',histtype = 'bar', color ='red')
+```
+
 ## Correlation-相互之间的关联
+
+主要分为预测值和各特征之间的相关性、各特征相互之间的相关性，进行相关性的分析便于之后在特征工程中对各个特征进行相应的取舍和处理。（此处主要是针对数值特征，类别特征有待进一步考量确认）
+
+关于多变量之间相互关系的可视化更多信息可以参考 [这里](https://www.jianshu.com/p/6e18d21a4cad)
+
+* 预测值和输入特征之间
+
+```python
+price_numeric = Train_data[numeric_features]
+correlation = price_numeric.corr()
+print(correlation['price'].sort_values(ascending = False),'\n')
+```
+
+```python
+# 预测值和单个特征之间的回归关系
+fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6), (ax7, ax8), (ax9, ax10)) = plt.subplots(nrows=5, ncols=2, figsize=(24, 20))
+# ['v_12', 'v_8' , 'v_0', 'power', 'v_5',  'v_2', 'v_6', 'v_1', 'v_14']
+v_12_scatter_plot = pd.concat([Y_train,Train_data['v_12']],axis = 1)
+sns.regplot(x='v_12',y = 'price', data = v_12_scatter_plot,scatter= True, fit_reg=True, ax=ax1)
+
+v_8_scatter_plot = pd.concat([Y_train,Train_data['v_8']],axis = 1)
+sns.regplot(x='v_8',y = 'price',data = v_8_scatter_plot,scatter= True, fit_reg=True, ax=ax2)
+
+v_0_scatter_plot = pd.concat([Y_train,Train_data['v_0']],axis = 1)
+sns.regplot(x='v_0',y = 'price',data = v_0_scatter_plot,scatter= True, fit_reg=True, ax=ax3)
+
+power_scatter_plot = pd.concat([Y_train,Train_data['power']],axis = 1)
+sns.regplot(x='power',y = 'price',data = power_scatter_plot,scatter= True, fit_reg=True, ax=ax4)
+
+v_5_scatter_plot = pd.concat([Y_train,Train_data['v_5']],axis = 1)
+sns.regplot(x='v_5',y = 'price',data = v_5_scatter_plot,scatter= True, fit_reg=True, ax=ax5)
+
+v_2_scatter_plot = pd.concat([Y_train,Train_data['v_2']],axis = 1)
+sns.regplot(x='v_2',y = 'price',data = v_2_scatter_plot,scatter= True, fit_reg=True, ax=ax6)
+
+v_6_scatter_plot = pd.concat([Y_train,Train_data['v_6']],axis = 1)
+sns.regplot(x='v_6',y = 'price',data = v_6_scatter_plot,scatter= True, fit_reg=True, ax=ax7)
+
+v_1_scatter_plot = pd.concat([Y_train,Train_data['v_1']],axis = 1)
+sns.regplot(x='v_1',y = 'price',data = v_1_scatter_plot,scatter= True, fit_reg=True, ax=ax8)
+
+v_14_scatter_plot = pd.concat([Y_train,Train_data['v_14']],axis = 1)
+sns.regplot(x='v_14',y = 'price',data = v_14_scatter_plot,scatter= True, fit_reg=True, ax=ax9)
+
+v_13_scatter_plot = pd.concat([Y_train,Train_data['v_13']],axis = 1)
+sns.regplot(x='v_13',y = 'price',data = v_13_scatter_plot,scatter= True, fit_reg=True, ax=ax10)
+```
+
+* 输入特征之间
+
+```python
+# 相互关系热力图，这里包含了预测变量price
+f , ax = plt.subplots(figsize = (7, 7))
+plt.title('Correlation of Numeric Features with Price',y=1,size=16)
+sns.heatmap(correlation,square = True,  vmax=0.8)
+```
+
+```python
+# 相互关系可视化
+sns.set()
+columns = ['price', 'v_12', 'v_8' , 'v_0', 'power', 'v_5',  'v_2', 'v_6', 'v_1', 'v_14']
+sns.pairplot(Train_data[columns],size = 2 ,kind ='scatter',diag_kind='kde')
+plt.show()
+```
+
+## 生成数据报告
+
+```python
+import pandas_profiling
+pfr = pandas_profiling.ProfileReport(Train_data)
+pfr.to_file("./example.html")
+```
