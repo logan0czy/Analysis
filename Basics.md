@@ -13,7 +13,7 @@ get prediction(implementation)
 ## Prepare Data  
 ### Exploration Data Analysis  
 拿到数据第一步需要对数据全貌，基本特性，各项特征的内容有一定的了解。  
-1. 描述  
+1.描述  
 ```python
 import pandas as pd
 data = pd.read_csv(fpath, index_col= , parse_dates= )
@@ -24,12 +24,12 @@ data.describe() # 基础统计信息
 # 缺失值
 data.isnull().sum() / len(data)
 ```
-2. 选择部分直观上觉得有用的特征  
+2.选择部分直观上觉得有用的特征  
 用少量特征和简单预测模型建立一个baseline  
-3. baseline model上数据的进一步探索  
+3.baseline model上数据的进一步探索  
 此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见笔记[]  
 ### Feature Engineering  
-* Missing Values  
+**Missing Values**  
 出现原因:1.调查对象不愿提供 2.遗漏 3.数据逻辑上的先后关系，有的数据只能在特定情况下才有  
 ```python
 # ---- drop ----
@@ -41,9 +41,8 @@ data.drop([])
 from sklearn.impute import SimpleImputer
 # SimpleImputer is based on mean value imputation
 imputer = SimpleImputer()
-train_impute = imputer.fit_transform(train_x)
-test_impute = imputer.fit_transform(test_x)
-pd.DataFrame(train_impute, index= , columns= )
+data_impute = imputer.fit_transform(data)  # 'transform' for valid/test
+pd.DataFrame(data_impute, index= , columns= )
 ...
 
 # ---- imputation extension ----
@@ -51,7 +50,7 @@ pd.DataFrame(train_impute, index= , columns= )
 data[col+'_bool'] = data[col].isnull()
 imputation...
 ```
-* Categorival Variables  
+**Categorical Variables**  
 ```python
 # ---- label encoding ----
 # 序列型类别ordinal variables，用有序数值打标签可以反应出它们的先后顺序，在诸如决策树模型中很有用
@@ -60,4 +59,26 @@ from sklearn.preprocessing import LabelEncoder
 
 # ---- one-hot encoding ----
 # 类别之间没有先后顺序，nominal variables
+from sklearn.preprocessing import OneHotEncoder
+encoder = OneHotEncoder(handle_unkown='ignore', sparse=False)
+data_encode = encoder.fit_transform(data)  # 'transform' for valid/test
+data_encode = pd.DataFrame(data_encode, index= , columns= )
+...
+
+# ---- count encoding ----
+# 用类别出现的次数作为编码，注意只能使用training data统计!!!
+from category_encoders import CountEncoding
+...
+
+# ---- target encoding ----
+# 各类别下target标签的均值来编码
+from category_encoders import TargetEncoding
+...
+
+# ---- catboost encoding ----
+#  同样面向target, 只不过是在当前数据之前的类别下target的均值
+from category_encoders import CatBoostEncoding
+...
 ```
+**Numerical Variables**
+主要是数值分布不均的问题，常见长尾分布，用pandas绘制柱状图观察，数据取平方根（决策树有效）或者对数（使数值接近高斯分布，对深度学习模型有效）  
