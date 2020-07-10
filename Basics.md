@@ -140,19 +140,79 @@ train_X, valid_X, train_y, valid_y = train_test_split(X, y, random_state=1)
 model = RandomForestClassifier(n_estimators=100,
                                   random_state=0).fit(train_X, train_y)
 
-***********
+**********
 import eli5
-***********
+**********
 from eli5.sklearn import PermutationImportance
 
 perm = PermutationImportance(model, random_state=1).fit(val_X, val_y)
 eli5.show_weights(perm, feature_names = val_X.columns.tolist())
 ```
 **Partial Plots**  
+how does one feature affect the prediction when other features remain unchanged?  
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
-  Machine Learning Explainability
-  - debugging
-  - informing feature engineering
-  - directing future data collection
-  - informing human decision
-  - build trust
+train_X, valid_X, train_y, valid_y = train_test_split(X, y, random_state=1)
+model = RandomForestClassifier(n_estimators=100,
+                                  random_state=0).fit(train_X, train_y)
+
+**********
+# 1-D plot
+from matplotlib import pyplot as plt
+from pdpbox import pdp, get_dataset, info_plots
+
+# Create the data that we will plot
+pdp_goals = pdp.pdp_isolate(model=model, dataset=valid_X, model_features=feature_names, feature='col_name')
+
+# plot it
+pdp.pdp_plot(pdp_goals, 'col_name')
+plt.show()
+
+**********
+# 2-D plot
+features_to_plot = ['Goal Scored', 'Distance Covered (Kms)']
+inter1  =  pdp.pdp_interact(model=model, dataset=valid_X, model_features=feature_names, features=features_to_plot)
+
+pdp.pdp_interact_plot(pdp_interact_out=inter1, feature_names=features_to_plot, plot_type='contour')
+plt.show()
+```
+**SHAP Values**  
+相对于baseline value, raw data值对prediction正负贡献的量化  
+`sum(SHAP values for all features) = pred_for_team - pred_for_baseline_values`
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+train_X, valid_X, train_y, valid_y = train_test_split(X, y, random_state=1)
+model = RandomForestClassifier(n_estimators=100,
+                                  random_state=0).fit(train_X, train_y)
+
+**********
+row_to_show = 5
+data_for_prediction = val_X.iloc[row_to_show]  # use 1 row of data here. Could use multiple rows if desired
+
+import shap  # package used to calculate Shap values
+
+# Create object that can calculate shap values
+explainer = shap.TreeExplainer(model)
+
+# Calculate Shap values
+shap_values = explainer.shap_values(data_for_prediction)
+
+# show contributions
+shap.initjs()
+shap.force_plot(explainer.expected_value[1], shap_values[1], data_for_prediction)  # [1]index for 'True' target, [0] for 'False'
+
+# use Kernel SHAP to explain test set predictions
+k_explainer = shap.KernelExplainer(my_model.predict_proba, train_X)
+k_shap_values = k_explainer.shap_values(data_for_prediction)
+shap.force_plot(k_explainer.expected_value[1], k_shap_values[1], data_for_prediction)
+```
+    Machine Learning Explainability
+    - debugging
+    - informing feature engineering
+    - directing future data collection
+    - informing human decision
+    - build trust
