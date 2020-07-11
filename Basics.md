@@ -6,9 +6,9 @@
 * [Prepare Data](#Prepare)  
     * EDA  
     * Feature Engineering
-* [Select Model]  
+* [Select Model](#Select-Model)  
 * Training  
-* [Evaluation]  
+* Evaluation  
 * Tune Parameters  
 * Get Prediction(Implementation)  
 
@@ -119,7 +119,7 @@ from category_encoders import CatBoostEncoding
 
 > 下列相关的操作都是基于在baseline model上的，比如Lasso regression, decision tree, random forests等，使用这些模型得到的基础训练结果可以为进一步的feature engineering提供信息，主要关注特征选择，找出重要特征以后还可以对这些特征进行进一步的特征组合  
 
-[返回section目录](#Prepare)
+[返回section目录](#Prepare)  
 <span id='Mutual-Information'> </span>
 **Multual Information**  
 各特征与target的互信息  
@@ -207,14 +207,14 @@ shap_values = explainer.shap_values(data_for_prediction)
 # show contributions
 shap.initjs()
 shap.force_plot(explainer.expected_value[1], shap_values[1], data_for_prediction)  # [1]index for 'True' target,
-                                                                                     [0] for 'False'
+                                                                                   # [0] for 'False'
 # use Kernel SHAP to explain test set predictions
 k_explainer = shap.KernelExplainer(my_model.predict_proba, train_X)
 k_shap_values = k_explainer.shap_values(data_for_prediction)
 shap.force_plot(k_explainer.expected_value[1], k_shap_values[1], data_for_prediction)
 ```
 以上是用SHAP对单行数据进行分析得到的结果，SHAP还有一个有效的使用是不但能够知道数据集各特征对预测的影响程度，而且能够知道每种特征具体影响的分布(比如整体都不具有影响性，或者某些数据具有较强影响性，但是大部分影响比较中庸)--More details than permutation importance and partial dependence plots  
---summary plots--
+`summary plots`  
 ```python
 # 以下程序在数据量不大时适用，另外程序运行对XGBoost有特定的优化
 # Create object that can calculate shap values
@@ -225,7 +225,7 @@ shap_values = explainer.shap_values(val_X)
 # Make plot. Index of [1] is explained in text below.
 shap.summary_plot(shap_values[1], val_X)
 ```
---dependence contribution plots--  
+`dependence contribution plots`  
 和partial dependence plots类似，但是额外的提供某特征与另一特征之间的关联信息，如当前特征对预测的影响在对应值上是恒定的还是有分布，若有分布说明预测还受其它特征的共同作用。另外也可以看出当前特征一定趋势取值下对预测的影响。  
 ```python
 # Create object that can calculate shap values
@@ -244,3 +244,27 @@ shap.dependence_plot('Ball Possession %', shap_values[1], X, interaction_index="
     - directing future data collection
     - informing human decision
     - build trust
+
+<span id='Select-Model'> </span>
+## [Select Model](#head)  
+许多工作都应该从dirty work开始，scikit-learn提供了许多基本模型(Decision Tree, Random Forest, XGBoost, Lightgbm等)，先用这些库拟合得到baseline，再进行进一步的调优，模型调整。基本API是  
+`define model and its parameters/random state -> fit training data -> predict on valid -> evaluate`  
+研究不同模型的性能表现需要以验证集的指标为准，此外，为了避免单验证集上数据量限制原因使得其性能表现有有偶然性（即模型拟合了验证集上的特定特性），常用的是交叉验证方法，cross validation。  
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(my_pipeline/model, X, y, cv=5, scoring='metric_name')
+scores.mean()
+import sklearn.metrics
+# compare based on metrics
+```
+额外提一下XGBoost(Extreme Gradient Boosting)，基于梯度下降从已有的模型参数得到更优参数生成新模型加入到model set，`ensemble`方式。  
+重要参数：`n_estimators, early_stopping_rounds & eval_set, learning_rate, n_jobs`  
+```python
+from xgboost import XGBRegressor
+my_model = XGBRegressor(n_estimators=1000, learning_rate=0.05, n_jobs=4)
+my_model.fit(X_train, y_train, 
+             early_stopping_rounds=5, 
+             eval_set=[(X_valid, y_valid)], 
+             verbose=False)
+```
