@@ -118,6 +118,7 @@ from category_encoders import CatBoostEncoding
 主要是数值分布不均的问题，常见长尾分布，用pandas绘制柱状图观察，数据取平方根（决策树有效）或者对数（使数值接近高斯分布，对深度学习模型有效）  
 
 > 下列相关的操作都是基于在baseline model上的，比如Lasso regression, decision tree, random forests等，使用这些模型得到的基础训练结果可以为进一步的feature engineering提供信息，主要关注特征选择，找出重要特征以后还可以对这些特征进行进一步的特征组合  
+
 [返回section目录](#Prepare)
 <span id='Mutual-Information'> </span>
 **Multual Information**  
@@ -234,7 +235,7 @@ shap_values = explainer.shap_values(X)
 # make plot.
 shap.dependence_plot('Ball Possession %', shap_values[1], X, interaction_index="Goal Scored")
 ```
-[回到顶部](#head)
+[回到顶部](#head)  
 **总体来说，特征工程一部分目的是提高模型的预测能力，另一部分也为模型结果提供了许多因素分析，reasonability**  
 
     Machine Learning Explainability
