@@ -1,4 +1,5 @@
 # How to start a machine learning project from scratch?  
+(mainly summarizing from [kaggle micro-course](https://www.kaggle.com/learn/overview))
 **Contents**  
 gather the data  
 prepare the data  
@@ -29,7 +30,7 @@ data.isnull().sum() / len(data)
 用少量特征和简单预测模型建立一个baseline  
 
 3.baseline model上数据的进一步探索  
-此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见笔记[]  
+此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[笔记]  
 ### Feature Engineering  
 > 总体遵循--预处理操作将训练集和验证/测试集分离，避免data leakage问题。最好的方式make your data pipeline, 所有的预处理都放在pipeline内部进行  
 
@@ -203,13 +204,46 @@ shap_values = explainer.shap_values(data_for_prediction)
 
 # show contributions
 shap.initjs()
-shap.force_plot(explainer.expected_value[1], shap_values[1], data_for_prediction)  # [1]index for 'True' target, [0] for 'False'
+shap.force_plot(explainer.expected_value[1], shap_values[1], data_for_prediction)  # [1]index for 'True' target,
+                                                                                     [0] for 'False'
 
 # use Kernel SHAP to explain test set predictions
 k_explainer = shap.KernelExplainer(my_model.predict_proba, train_X)
 k_shap_values = k_explainer.shap_values(data_for_prediction)
 shap.force_plot(k_explainer.expected_value[1], k_shap_values[1], data_for_prediction)
 ```
+以上是用SHAP对单行数据进行分析得到的结果，SHAP还有一个有效的使用是不但能够知道数据集各特征对预测的影响程度，而且能够知道每种特征具体影响的分布(比如整体都不具有影响性，或者某些数据具有较强影响性，但是大部分影响比较中庸)--More details than permutation importance and partial dependence plots  
+--summary plots--
+```python
+# 以下程序在数据量不大时适用，另外程序运行对XGBoost有特定的优化
+
+import shap  # package used to calculate Shap values
+
+# Create object that can calculate shap values
+explainer = shap.TreeExplainer(my_model)
+
+# calculate shap values. This is what we will plot.
+# Calculate shap_values for all of val_X rather than a single row, to have more data for plot.
+shap_values = explainer.shap_values(val_X)
+
+# Make plot. Index of [1] is explained in text below.
+shap.summary_plot(shap_values[1], val_X)
+```
+--dependence contribution plots--  
+和partial dependence plots类似，但是额外的提供某特征与另一特征之间的关联信息，如当前特征对预测的影响在对应值上是恒定的还是有分布，若有分布说明预测还受其它特征的共同作用。另外也可以看出当前特征一定趋势取值下对预测的影响。  
+```python
+import shap  # package used to calculate Shap values
+
+# Create object that can calculate shap values
+explainer = shap.TreeExplainer(my_model)
+
+# calculate shap values. This is what we will plot.
+shap_values = explainer.shap_values(X)
+
+# make plot.
+shap.dependence_plot('Ball Possession %', shap_values[1], X, interaction_index="Goal Scored")
+```
+**总体来说，特征工程一部分目的是提高模型的预测能力，另一部分也为模型结果提供了许多因素分析，reasonability**  
     Machine Learning Explainability
     - debugging
     - informing feature engineering
