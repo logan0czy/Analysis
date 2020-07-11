@@ -2,7 +2,7 @@
 (mainly summarizing from [kaggle micro-course](https://www.kaggle.com/learn/overview))  
 **Contents**  
 * Gather Data  
-* [Prepare Data](#Prepare Data)  
+* [Prepare Data](#Prepare)  
     * EDA  
     * Feature Engineering
 * [Select Model]  
@@ -13,18 +13,20 @@
 
 ## Gather Data  
 根据需要采集数据，过程中可能发生数据缺失或者受到污染的问题。  
+<span id='Prepare'> </span>
 ## Prepare Data  
-* [EDA](#Exploration Data Analysis)  
-* [Feature Engineering](#Feature Engineering)  
-    * [Missing Values](#Missing Values)  
-    * [Categorical Variables](#Categorical Variables)  
-    * [Numerical Variables](#Numerical Variables)  
+* [EDA](#EDA)  
+* [Feature Engineering](#Feature-Engineering)  
+    * [Missing Values](#Missing-Values)  
+    * [Categorical Variables](#Categorical-Variables)  
+    * [Numerical Variables](#Numerical-Variables)  
     * Feature Selection  
-        * [Mutual Information](#Mutual Information)  
+        * [Mutual Information](#Mutual-Information)  
         * [L1 Regression](#Lasso)
         * [Permutation](#Permutation)
-        * [Partial Plots](#Partial Plots)
+        * [Partial Plots](#Partial-Plots)
         * [SHAP](#SHAP)
+<span id='EDA'> </span>
 ### Exploration Data Analysis  
 拿到数据第一步需要对数据全貌，基本特性，各项特征的内容有一定的了解。  
 1.描述  
@@ -44,10 +46,11 @@ data.isnull().sum() / len(data)
 
 3.baseline model上数据的进一步探索  
 此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[pandas常用操作整理]()。此外，还有[常用可视化]()  
+<span id='Feature Engineering'> </span>
 ### Feature Engineering  
 > 总体遵循--预处理操作将训练集和验证/测试集分离，避免data leakage问题。最好的方式make your data pipeline, 所有的预处理都放在pipeline内部进行  
 
-<span id='Missing Values'> </span>
+<span id='Missing-Values'> </span>
 **Missing Values**  
 出现原因:  1.调查对象不愿提供  2.遗漏  3.数据逻辑上的先后关系，有的数据只能在特定情况下才有  
 ```python
@@ -70,7 +73,7 @@ pd.DataFrame(data_impute, index= , columns= )
 data[col+'_bool'] = data[col].isnull()
 imputation...
 ```
-<span id='Categorical Variables'> </span>
+<span id='Categorical-Variables'> </span>
 **Categorical Variables**  
 ```python
 # ---- label encoding ----
@@ -102,13 +105,13 @@ from category_encoders import TargetEncoding
 from category_encoders import CatBoostEncoding
 ...
 ```
-<span id='Numerical Variables'> </span>
+<span id='Numerical-Variables'> </span>
 **Numerical Variables**  
 主要是数值分布不均的问题，常见长尾分布，用pandas绘制柱状图观察，数据取平方根（决策树有效）或者对数（使数值接近高斯分布，对深度学习模型有效）  
 
 > 下列相关的操作都是基于在baseline model上的，比如Lasso regression, decision tree, random forests等，使用这些模型得到的基础训练结果可以为进一步的feature engineering提供信息，主要关注特征选择，找出重要特征以后还可以对这些特征进行进一步的特征组合  
 
-<span id='Mutual Information'> </span>
+<span id='Mutual-Information'> </span>
 **Multual Information**  
 各特征与target的互信息  
 ```python
@@ -168,7 +171,7 @@ from eli5.sklearn import PermutationImportance
 perm = PermutationImportance(model, random_state=1).fit(val_X, val_y)
 eli5.show_weights(perm, feature_names = val_X.columns.tolist())
 ```
-<span id='Partial Plots'> </span>
+<span id='Partial-Plots'> </span>
 **Partial Plots**  
 how does one feature affect the prediction when other features remain unchanged?  
 ```python
