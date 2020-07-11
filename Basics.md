@@ -1,17 +1,30 @@
 # How to start a machine learning project from scratch?  
-(mainly summarizing from [kaggle micro-course](https://www.kaggle.com/learn/overview))
+(mainly summarizing from [kaggle micro-course](https://www.kaggle.com/learn/overview))  
 **Contents**  
-gather the data  
-prepare the data  
-select model  
-train the model  
-evaluate the model  
-tune parameters  
-get prediction(implementation)  
+* Gather Data  
+* [Prepare Data](#Prepare Data)  
+    * EDA  
+    * Feature Engineering
+* [Select Model]  
+* [Training]  
+* [Evaluation]  
+* [Tune Parameters]  
+* [Get Prediction(Implementation)]  
 
 ## Gather Data  
 根据需要采集数据，过程中可能发生数据缺失或者受到污染的问题。  
 ## Prepare Data  
+* [EDA](#Exploration Data Analysis)  
+* [Feature Engineering](#Feature Engineering)  
+    * [Missing Values](#Missing Values)  
+    * [Categorical Variables](#Categorical Variables)  
+    * [Numerical Variables](#Numerical Variables)  
+    * Feature Selection  
+        * [Mutual Information](#Mutual Information)  
+        * [L1 Regression](#Lasso)
+        * [Permutation](#Permutation)
+        * [Partial Plots](#Partial Plots)
+        * [SHAP](#SHAP)
 ### Exploration Data Analysis  
 拿到数据第一步需要对数据全貌，基本特性，各项特征的内容有一定的了解。  
 1.描述  
@@ -30,10 +43,11 @@ data.isnull().sum() / len(data)
 用少量特征和简单预测模型建立一个baseline  
 
 3.baseline model上数据的进一步探索  
-此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[笔记]  
+此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[pandas常用操作整理]()。此外，还有[常用可视化]()  
 ### Feature Engineering  
 > 总体遵循--预处理操作将训练集和验证/测试集分离，避免data leakage问题。最好的方式make your data pipeline, 所有的预处理都放在pipeline内部进行  
 
+<span id='Missing Values'> </span>
 **Missing Values**  
 出现原因:  1.调查对象不愿提供  2.遗漏  3.数据逻辑上的先后关系，有的数据只能在特定情况下才有  
 ```python
@@ -56,6 +70,7 @@ pd.DataFrame(data_impute, index= , columns= )
 data[col+'_bool'] = data[col].isnull()
 imputation...
 ```
+<span id='Categorical Variables'> </span>
 **Categorical Variables**  
 ```python
 # ---- label encoding ----
@@ -87,11 +102,13 @@ from category_encoders import TargetEncoding
 from category_encoders import CatBoostEncoding
 ...
 ```
+<span id='Numerical Variables'> </span>
 **Numerical Variables**  
 主要是数值分布不均的问题，常见长尾分布，用pandas绘制柱状图观察，数据取平方根（决策树有效）或者对数（使数值接近高斯分布，对深度学习模型有效）  
 
 > 下列相关的操作都是基于在baseline model上的，比如Lasso regression, decision tree, random forests等，使用这些模型得到的基础训练结果可以为进一步的feature engineering提供信息，主要关注特征选择，找出重要特征以后还可以对这些特征进行进一步的特征组合  
 
+<span id='Mutual Information'> </span>
 **Multual Information**  
 各特征与target的互信息  
 ```python
@@ -107,6 +124,7 @@ selected_data = pd.DataFrame(selector.inverse_transform(data_new),
                                  columns=data.columns)
 selected_data.head()
 ```
+<span id='Lasso'> </span>
 **L1 Regression: Lasso**  
 L1范数惩罚项进行的回归得到的结果为稀疏矩阵，主要用这个特性进行特征的筛选，惩罚系数越大，保留的特征越少，它与L2范数惩罚项不同(Ridge回归用于避免overfitting)  
 最优的惩罚项系数还是要通过验证集来选择  
@@ -130,6 +148,7 @@ selected_features = pd.DataFrame(model.inverse_transform(X_new),
                                  index=X.index,
                                  columns=X.columns)
 ```
+<span id='Permutation'> </span>
 **Permutation Importance**  
 以验证数据集为参考，将训练好的模型应用在某一列特征随机乱序后的数据上，观察预测效果的改变
 `fast to compute; widely used, easy to understand; consistent`  
@@ -149,6 +168,7 @@ from eli5.sklearn import PermutationImportance
 perm = PermutationImportance(model, random_state=1).fit(val_X, val_y)
 eli5.show_weights(perm, feature_names = val_X.columns.tolist())
 ```
+<span id='Partial Plots'> </span>
 **Partial Plots**  
 how does one feature affect the prediction when other features remain unchanged?  
 ```python
@@ -179,6 +199,7 @@ inter1  =  pdp.pdp_interact(model=model, dataset=valid_X, model_features=feature
 pdp.pdp_interact_plot(pdp_interact_out=inter1, feature_names=features_to_plot, plot_type='contour')
 plt.show()
 ```
+<span id='SHAP'> </span>
 **SHAP Values**  
 相对于baseline value, raw data值对prediction正负贡献的量化  
 `sum(SHAP values for all features) = pred_for_team - pred_for_baseline_values`
@@ -244,6 +265,7 @@ shap_values = explainer.shap_values(X)
 shap.dependence_plot('Ball Possession %', shap_values[1], X, interaction_index="Goal Scored")
 ```
 **总体来说，特征工程一部分目的是提高模型的预测能力，另一部分也为模型结果提供了许多因素分析，reasonability**  
+
     Machine Learning Explainability
     - debugging
     - informing feature engineering
