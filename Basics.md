@@ -64,7 +64,7 @@ data.isnull().sum() / len(data)
 用少量特征和简单预测模型建立一个baseline  
 
 3.baseline model上数据的进一步探索  
-此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[pandas常用操作整理]()。此外，还有[常用可视化]()  
+此部分用pandas库可以极大简化操作，提高数据分析效率，一些常用操作见[pandas常用操作整理]()。此外，还有[常用可视化](./Visualization.md)  
 <span id='Feature Engineering'> </span>
 ### [Feature Engineering](#Prepare)  
 > 总体遵循--预处理操作将训练集和验证/测试集分离，避免data leakage问题。最好的方式make your data pipeline, 所有的预处理都放在pipeline内部进行  
