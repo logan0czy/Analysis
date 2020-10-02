@@ -24,11 +24,82 @@
 
 <span id='title3'></span>
 ## [Discover and visualize the data to gain insights](#head)
+- Visualizing data  
+- Looking for correlations  
+- Experiment with attribute combinations  
 ### Visualizing data
 如果训练集整个过大，可以选取一部分进行可视化
+```
+pd.DataFrame.plot(kind='scatter', x='attr1', y='attr2', alpha=0.4,
+    s='attr3', label='label', figsize=(20, 18),
+    c='attr4', cmap=plt.get_cmap('jet'), colorbar=True,
+)
+```
+
+### Looking for correlations
+各个属性之间的*线性相关性*  
+```
+import pandas as pd
+corr_matrix = pd.DataFrame.corr()
+corr_matrix['target_attr'].sort_values(ascending=True)
+
+from pandas.plotting import scatter_matrix
+attributes = ['attr1', 'attr2', 'attr3', 'attr4', 'attr5']
+scatter_matrix(pd.DataFrame[attributes], figsize=(12, 8))
+```
+
+### Experiment with attribute combinations
+根据预测目标以及实例拥有的各种属性猜测有用的属性之间的组合关系，从而为实例添加新的属性来帮助预测的准确性。另外在探索阶段不需要穷尽每一种可能的属性组合，只需要产生几种就可，属性的其他可能组合可以在之后根据训练结果再进行多轮的修改。  
 
 <span id='title4'></span>
 ## [Prepare the data for Machine Learning algorithms](#head)
+**Write functions, form a pipeline**  
+- [Data cleaning](#title4-1)  
+- [Handling text and categorical attributes](#title4-2)  
+- [Custom transformers](#title4-3)  
+- [Feature scaling](#title4-4)  
+- [Transformation pipelines](#title4-5)  
+> **Scikit-learn API design**  
+> Consistency:  
+>> Estimators: -> `fit()`method  
+估计数据集中的相关统计信息。  
+Transformers: -> `transform()`method  
+根据estimator中学习到的参数对数据集进行变化。一般`fit_transform()`底层优化的速度更快。  
+Predictors: -> `predict(), score()`method
+
+> Inspection  
+>> All the estimator’s hyperparameters are accessible directly via public instance variables (e.g., imputer.strategy), and all the estimator’s learned parameters are accessible via public instance variables with an underscore suffix (e.g., imputer.statistics_).  
+
+> Nonproliferation of classes  
+>> Datasets are represented as NumPy arrays or SciPy sparse matrices, instead of homemade classes. Hyperparameters are just regular Python strings or numbers.  
+
+> Composition  
+>> Existing building blocks are reused as much as possible. For example, it is easy to create a Pipeline estimator from an arbitrary sequence of transformers followed by a final estimator, as we will see.  
+
+> Sensible defaults  
+>> Scikit-Learn provides reasonable default values for most parameters, making it easy to quickly create a baseline working system.  
+
+<span id='title4-1'></span>
+### Data cleaning
+数值型数据项的缺失数据删除或插值补全，因为不确定各个属性之后的新实例中会不会遇到缺失值，所以最好对每一个数值属性进行插值的相关统计量的计算。
+```
+from sklearn.impute import SimpleImputer
+imputer = SimpleImputer(strategy='median')
+imputer.fit(pd.DataFrame)
+imputer.transform(pd.DataFrame)
+```
+
+<span id='title4-2'></span>
+### Handling text and categorical attributes
+
+<span id='title4-3'></span>
+### Custom transformers
+
+<span id='title4-4'></span>
+### Feature scaling  
+
+<span id='title4-5'></span>
+### Transformation pipelines
 
 <span id='title5'></span>
 ## [Select a model and train it](#head)
