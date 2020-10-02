@@ -17,13 +17,15 @@
 
 <span id='title2'></span>
 ## [Get the data](#head)
-编写一个自动化的脚本获取数据集，对数据集的大致内容，数据类型组成，简单统计信息，简单的可视化图像有一个基本的了解。  
+编写一个自动化的脚本获取数据集，对数据集的大致内容，数据类型组成，简单统计信息，简单的可视化数值分布图像有一个基本的了解。  
 > **train-test split**:  
 训练集测试集拆分，NEVER EVER LOOK AT THE TEST SET。一般按8:2的比例分割出测试集，并且将测试集对应的的数据进行固定（固定方法可以根据每个实例中unique的属性对应的哈希值来划分数据集）。  
 >> **sampling bias**: 由于随机抽样导致训练集和测试集得到的数据分布不一致（因为机器学习本质上是对同一概率分布下的观测数据进行拟合预测）。解决办法是分层抽样（Stratified Sampling)，scikit-learn有现成的工具，根据对预测值最重要的那个属性的分布进行分层抽样（可能需要有数据分桶的操作）。  
 
 <span id='title3'></span>
 ## [Discover and visualize the data to gain insights](#head)
+### Visualizing data
+如果训练集整个过大，可以选取一部分进行可视化
 
 <span id='title4'></span>
 ## [Prepare the data for Machine Learning algorithms](#head)
