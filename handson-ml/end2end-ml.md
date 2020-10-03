@@ -91,15 +91,24 @@ imputer.transform(pd.DataFrame)
 
 <span id='title4-2'></span>
 ### Handling text and categorical attributes
+转化为表示类别的数值，若类别之间有顺序性，使用sklearn.preprocessing.OrdinalEncoder；若类别之间是没有任何相关性的，使用sklearn.preprocessing.OneHotEncoder，（Scipy存储产生的稀疏矩阵）。  
+当整个类别的数量过多后也会影响模型的学习效果，其中一个办法是用一些相关的数值来进行表示和替代；另一个办法就是使用Embedding等的技术。  
 
 <span id='title4-3'></span>
 ### Custom transformers
+因为Scikit-Learn依照的是`duck typing`，所以可以自定义transformer（`fit()->返回self, transform(), fit_transform()`）。  
+> You can get the last one for free by simply adding **TransformerMixin** as a base class. If you add **BaseEstimator** as a base class (and avoid `*args` and `**kargs` in your constructor), you will also get two extra methods (get_params() and set_params()) that will be useful for automatic hyperparameter tuning.
 
 <span id='title4-4'></span>
-### Feature scaling  
+### Feature scaling
+**min-max scaling**: also called normalization, `MinMaxScaler` from Scikit-Learn.  
+**standardization**: `StandardScaler` from Scikit-Learn.  
+> Unlike min-max scaling, standardization does not bound values to a specific range, which may be a problem for some algorithms (e.g., neural networks often expect an input value ranging from 0 to 1). However, standardization is much less affected by outliers.
 
 <span id='title4-5'></span>
 ### Transformation pipelines
+除了最后一个以外其他的元素都需要是transformer，pipeline使用的是与最后一个estimator相同的API。
+```
 
 <span id='title5'></span>
 ## [Select a model and train it](#head)
