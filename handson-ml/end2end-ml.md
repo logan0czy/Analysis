@@ -109,15 +109,66 @@ imputer.transform(pd.DataFrame)
 ### Transformation pipelines
 除了最后一个以外其他的元素都需要是transformer，pipeline使用的是与最后一个estimator相同的API。
 ```
+from sklearn.pipeline import Pipeline
+from sklean.compose import ColumnTransformer
+full_pipe = ColumnTransformer([
+        ('pipe1', transformer1, attr1),
+        ('pipe2', transformer2, attr2),
+    ])
+```
+> Instead of using a transformer, you can specify the string "drop" if you want the columns to be dropped, or you can specify "passthrough" if you want the columns to be left untouched. By default, the remaining columns (i.e., the ones that were not listed) will be dropped, but you can set the remainder hyperparameter to any transformer (or to "passthrough") if you want these columns to be handled differently.
 
 <span id='title5'></span>
 ## [Select a model and train it](#head)
+**K-fold cross-validation**, `sklearn.model_selection.cross_val_score`. 在深入某一个模型之前，多尝试几个模型看看预测的效果，这能得到一些基本的比较和参考，得到模型的备选集。  
+> You should save every model you experiment with so that you can come back easily to any model you want. Make sure you save both **the hyperparameters and the trained parameters, as well as the cross-validation scores and perhaps the actual predictions as well**. This will allow you to easily compare scores across model types, and compare the types of errors they make. You can easily save Scikit-Learn models by using Python’s pickle module or by using the **joblib** library, which is more efficient at serializing large NumPy arrays (you can install this library using pip):
+```
+import joblib
+joblib.dump(my_model, "my_model.pkl")
+# and later...
+my_model_loaded = joblib.load("my_model.pkl")
+```
 
 <span id='title6'></span>
 ## [Fine-tune your model](#head)
+*Grid Search*  
+```
+from sklearn.model_selection import GridSearchCV
+param_grid = [
+        {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]}, 
+        {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3,4]}, 
+    ]
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True)
+```
+*Randomized Search*  
+当超参数组合数过多时，偏向于使用随机搜索的方法检索超参数的可能值。 
+
+**Analyze the Best Model and Their Errors**  
+分析得到的最好模型中各个属性特征的重要性程度，以及预测出错的部分可能的原因。  
+将测试集/验证集中的数据分割为不同类型的子集，观察模型在各个自己上的表现是分析模型出错原因的不错思路  
+**Evaluate Your System on the Test Set**  
+compute a confidence interval for the generalization error.  
+```
+from scipy import stats
+squared_errors = (final_predictions - y_test) ** 2
+np.sqrt(stats.t.interval(confidence, len(squared_errors) - 1, 
+                         loc=squared_errors.mean(), scale=stats.sem(squared_errors)))
+```
 
 <span id='title7'></span>
 ## [Present your solution](#head)
+1.记录重要的结果发现。2.清晰简明的图表表示。3.简洁的基本结论。  
+其中要记录的包括：学习到什么；有效的和无效的部分；模型中的假设；模型or系统的局限性。。。  
 
 <span id='title8'></span>
-## [Launch, monitor, and maintain your system](#head)    
+## [Launch, monitor, and maintain your system](#head)  
+数据分析中模型训练反而是耗时最少的一环，更加需要长久处理的是数据预处理以及模型发布后的更新维护环节。  
+模型部署后需要编写监控脚本随时监控模型在线预测的表现，模型效果有可能出现急剧下降，也有可能随着时间的推移缓慢变化（输入输出数据概率分布随着时间有所变化）。监控模型性能可以通过下游的任务的提升效果反映；或者通过抽样进行人工的结果分析。  
+自动化更新在线模型的一些tips:  
+- 持续收集新数据  
+- 训练及fine-tune模型的自动化脚本  
+- 比较旧模型及新模型在新的数据集上性能表现的脚本，以此决定是否发布新版模型  
+
+此外，也需要监控输入数据的质量（分布不均，缺失值过多，出现新的数据类型等等）。  
+**确保备份各版本数据集以及各版本的模型，以方便当前模型效果变差时的回退**
